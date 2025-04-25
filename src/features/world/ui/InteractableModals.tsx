@@ -40,7 +40,9 @@ import { ChristmasPortal } from "./portals/ChristmasPortal";
 import { ChristmasReward } from "./npcs/Santa";
 import { WeatherShop } from "features/game/expansion/components/temperateSeason/WeatherShop";
 import { PortalChooser } from "./portals/PortalChooser";
-
+import { EventShop } from "./eventShop/eventShop";
+import { EasterEggstravaganza } from "./portals/EasterEggstravaganza";
+import { HotAirBalloon } from "features/loveIsland/HotAirBalloon";
 type InteractableName =
   | "desert_noticeboard"
   | "faction_noticeboard"
@@ -130,7 +132,10 @@ type InteractableName =
   | "halloween"
   | "christmas_portal"
   | "festive_tree"
-  | "portal_chooser";
+  | "portal_chooser"
+  | "event_shop"
+  | "easter-eggstravaganza"
+  | "air_balloon";
 
 class InteractableModalManager {
   private listener?: (name: InteractableName, isOpen: boolean) => void;
@@ -203,6 +208,9 @@ export const InteractableModals: React.FC<Props> = ({ id, scene }) => {
       )}
       <Modal show={interactable === "faction_intro"} onHide={closeModal}>
         <FactionWelcome onClose={closeModal} />
+      </Modal>
+      <Modal show={interactable === "air_balloon"} onHide={closeModal}>
+        <HotAirBalloon onClose={closeModal} />
       </Modal>
       <Modal show={interactable === "weather_shop"} onHide={closeModal}>
         <WeatherShop onClose={closeModal} />
@@ -843,12 +851,22 @@ export const InteractableModals: React.FC<Props> = ({ id, scene }) => {
       >
         <WorldMap onClose={closeModal} />
       </Modal>
+      <Modal show={interactable === "goblin_market"} onHide={closeModal}>
+        <GoblinMarket onClose={closeModal} />
+      </Modal>
+      <Modal show={interactable === "event_shop"}>
+        <EventShop onClose={closeModal} />
+      </Modal>
       <Modal
-        show={interactable === "goblin_market"}
-        dialogClassName="md:max-w-3xl"
+        show={interactable === "easter-eggstravaganza"}
         onHide={closeModal}
       >
-        <GoblinMarket onClose={closeModal} />
+        <CloseButtonPanel
+          onClose={closeModal}
+          bumpkinParts={NPC_WEARABLES.hopper}
+        >
+          <EasterEggstravaganza onClose={closeModal} />
+        </CloseButtonPanel>
       </Modal>
       <Modal show={interactable === "christmas_reward"}>
         <ChristmasReward onClose={closeModal} />

@@ -12,33 +12,136 @@ type StreamSchedule = {
   minute: number;
 };
 
-const getNextStreamTime = (schedule: StreamSchedule): Date => {
-  const now = new Date();
-  const sydneyTime = new Date(
-    now.toLocaleString("en-US", { timeZone: "Australia/Sydney" }),
+type StreamConfig = {
+  day: number;
+  startHour: number;
+  startMinute: number;
+  durationMinutes: number;
+  notifyMinutesBefore: number;
+};
+
+const NO_STREAM_DATES = [
+  "2025-04-25", // ANZAC Day
+  "2025-12-26", // Boxing Day
+];
+
+export const STREAMS_CONFIG = {
+  tuesday: {
+    day: 2,
+    startHour: 15,
+    startMinute: 30,
+    durationMinutes: 60,
+    notifyMinutesBefore: 10,
+  } as StreamConfig,
+  friday: {
+    day: 5,
+    startHour: 10,
+    startMinute: 0,
+    durationMinutes: 60,
+    notifyMinutesBefore: 10,
+  } as StreamConfig,
+};
+
+export const getNextStreamTime = (schedule: StreamSchedule): number => {
+  // Create a date object in Sydney timezone
+  const sydneyTime = new Date();
+  const sydneyDate = new Date(
+    sydneyTime.toLocaleString("en-US", { timeZone: "Australia/Sydney" }),
   );
 
-  // Create next stream date
-  const nextStream = new Date(sydneyTime);
-  nextStream.setHours(schedule.hour, schedule.minute, 0, 0);
+  // Get current day, hour and minute in Sydney
+  const currentDay = sydneyDate.getDay();
+  const currentHour = sydneyDate.getHours();
+  const currentMinute = sydneyDate.getMinutes();
 
-  // If current time is past the target time, move to next week
-  if (sydneyTime > nextStream) {
-    nextStream.setDate(nextStream.getDate() + 7);
+  // Calculate minutes until next stream
+  let minutesUntilStream = 0;
+
+  // If we're past the stream time today, calculate for next week
+  if (
+    currentDay === schedule.day &&
+    (currentHour > schedule.hour ||
+      (currentHour === schedule.hour && currentMinute >= schedule.minute))
+  ) {
+    minutesUntilStream =
+      7 * 24 * 60 - // Full week in minutes
+      (currentHour * 60 + currentMinute) + // Minutes passed today
+      (schedule.hour * 60 + schedule.minute); // Stream time
+  } else {
+    // Calculate days until next stream
+    const daysUntilStream = (schedule.day - currentDay + 7) % 7;
+
+    // Calculate total minutes until stream
+    minutesUntilStream =
+      daysUntilStream * 24 * 60 + // Days in minutes
+      (schedule.hour * 60 + schedule.minute) - // Stream time
+      (currentHour * 60 + currentMinute); // Current time
   }
 
-  // Move to the target day if not already on that day
-  while (nextStream.getDay() !== schedule.day) {
-    nextStream.setDate(nextStream.getDate() + 1);
+  const nextStreamDate = new Date(
+    sydneyTime.getTime() + minutesUntilStream * 60000,
+  )
+    .toISOString()
+    .split("T")[0];
+
+  if (NO_STREAM_DATES.includes(nextStreamDate)) {
+    minutesUntilStream += 7 * 24 * 60;
+  }
+
+  // Create the next stream time by adding minutes to current time
+  const nextStreamTime = new Date(
+    sydneyTime.getTime() + minutesUntilStream * 60000,
+  );
+
+  // Set seconds to 00 by rounding down to the nearest minute
+  nextStreamTime.setSeconds(0);
+  nextStreamTime.setMilliseconds(0);
+
+  return nextStreamTime.getTime();
+};
+
+export type StreamNotification = {
+  startAt: number;
+  endAt: number;
+  notifyAt: number;
+};
+
+export function getStream(): StreamNotification | null {
+  let nextStream: StreamNotification | null = null;
+  let nextStreamTime = Infinity;
+
+  for (const stream of Object.values(STREAMS_CONFIG)) {
+    const streamStartTime = getNextStreamTime({
+      day: stream.day,
+      hour: stream.startHour,
+      minute: stream.startMinute,
+    });
+
+    if (streamStartTime < nextStreamTime) {
+      nextStreamTime = streamStartTime;
+      nextStream = {
+        startAt: nextStreamTime,
+        endAt: nextStreamTime + stream.durationMinutes * 60 * 1000,
+        notifyAt: nextStreamTime - stream.notifyMinutesBefore * 60 * 1000,
+      };
+    }
   }
 
   return nextStream;
-};
+}
 
 export const Streams: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { t } = useAppTranslation();
-  const tuesdayStream = getNextStreamTime({ day: 2, hour: 15, minute: 30 }); // Tuesday 3:30 PM
-  const fridayStream = getNextStreamTime({ day: 5, hour: 23, minute: 0 }); // Friday 11:00 PM
+  const tuesdayStream = getNextStreamTime({
+    day: STREAMS_CONFIG.tuesday.day,
+    hour: STREAMS_CONFIG.tuesday.startHour,
+    minute: STREAMS_CONFIG.tuesday.startMinute,
+  }); // Tuesday 3:30 PM
+  const fridayStream = getNextStreamTime({
+    day: STREAMS_CONFIG.friday.day,
+    hour: STREAMS_CONFIG.friday.startHour,
+    minute: STREAMS_CONFIG.friday.startMinute,
+  }); // Friday 11:00 AM
 
   return (
     <CloseButtonPanel bumpkinParts={NPC_WEARABLES.birdie} onClose={onClose}>
@@ -52,14 +155,14 @@ export const Streams: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           icon={SUNNYSIDE.icons.stopwatch}
           className="mb-2 ml-2"
         >
-          {`${t("streams.discord")} - ${tuesdayStream.toLocaleString()}`}
+          {`${t("streams.discord")} - ${new Date(tuesdayStream).toLocaleString()}`}
         </Label>
         <Label
           type="transparent"
           icon={SUNNYSIDE.icons.stopwatch}
           className="mb-2 ml-2"
         >
-          {`${t("streams.twitch")} - ${fridayStream.toLocaleString()}`}
+          {`${t("streams.twitch")} - ${new Date(fridayStream).toLocaleString()}`}
         </Label>
       </div>
       <div className="flex">

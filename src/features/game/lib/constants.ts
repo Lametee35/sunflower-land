@@ -12,7 +12,6 @@ import { getKeys } from "../types/craftables";
 import { BumpkinParts, tokenUriBuilder } from "lib/utils/tokenUriBuilder";
 import { Equipped } from "../types/bumpkin";
 import { isSeed, SeedName } from "../types/seeds";
-import { INITIAL_REWARDS } from "../types/rewards";
 import { makeAnimalBuilding } from "./animals";
 import { ChoreBoard } from "../types/choreBoard";
 import { getSeasonalTicket } from "../types/seasons";
@@ -413,6 +412,7 @@ export const INITIAL_FARM: GameState = {
   balance: new Decimal(0),
   previousBalance: new Decimal(0),
   inventory: {
+    "Easter Token 2025": new Decimal(500),
     Marty: new Decimal(2),
     Miffy: new Decimal(2),
     Morty: new Decimal(2),
@@ -451,20 +451,14 @@ export const INITIAL_FARM: GameState = {
   flower: {},
   bumpkin: INITIAL_BUMPKIN,
 
-  rewards: INITIAL_REWARDS,
-
   minigames: {
-    games: {},
-    prizes: {},
-  },
-
-  megastore: {
-    available: {
-      from: 0,
-      to: 0,
+    games: {
+      "easter-eggstravaganza": {
+        history: {},
+        highscore: 0,
+      },
     },
-    collectibles: [],
-    wearables: [],
+    prizes: {},
   },
 
   bounties: {
@@ -584,6 +578,9 @@ export const INITIAL_FARM: GameState = {
   stock: INITIAL_STOCK(),
   chickens: {},
   trades: {},
+  floatingIsland: {
+    schedule: [],
+  },
   buildings: {
     "Town Center": [
       {
@@ -710,6 +707,10 @@ export const INITIAL_FARM: GameState = {
     startedAt: 0,
   },
   lavaPits: {},
+  ban: {
+    status: "ok",
+    isSocialVerified: false,
+  },
 };
 
 export const TEST_FARM: GameState = {
@@ -747,13 +748,15 @@ export const TEST_FARM: GameState = {
   },
   choreBoard: INITIAL_CHORE_BOARD,
 
-  rewards: INITIAL_REWARDS,
   minigames: {
     games: {},
     prizes: {},
   },
   shipments: {},
   gems: {},
+  floatingIsland: {
+    schedule: [],
+  },
   flower: {},
   competitions: {
     progress: {},
@@ -1004,11 +1007,7 @@ export const TEST_FARM: GameState = {
     mushrooms: {},
   },
   beehives: {},
-  megastore: {
-    available: makeMegaStoreAvailableDates(),
-    collectibles: [],
-    wearables: [],
-  },
+
   specialEvents: {
     current: {},
     history: {},
@@ -1039,6 +1038,10 @@ export const TEST_FARM: GameState = {
     startedAt: 0,
   },
   lavaPits: {},
+  ban: {
+    isSocialVerified: false,
+    status: "ok",
+  },
 };
 
 export const INITIAL_EQUIPPED: Equipped = {
@@ -1071,7 +1074,6 @@ export const EMPTY: GameState = {
   calendar: {
     dates: [],
   },
-  rewards: INITIAL_REWARDS,
   bank: { taxFreeSFL: 0 },
   experiments: [],
   minigames: {
@@ -1086,6 +1088,9 @@ export const EMPTY: GameState = {
   choreBoard: INITIAL_CHORE_BOARD,
 
   stock: {},
+  floatingIsland: {
+    schedule: [],
+  },
   stockExpiry: {},
   wardrobe: {},
   previousWardrobe: {},
@@ -1152,11 +1157,7 @@ export const EMPTY: GameState = {
     spawnedAt: 0,
     mushrooms: {},
   },
-  megastore: {
-    available: makeMegaStoreAvailableDates(),
-    collectibles: [],
-    wearables: [],
-  },
+
   specialEvents: {
     current: {},
     history: {},
@@ -1186,4 +1187,8 @@ export const EMPTY: GameState = {
     startedAt: 0,
   },
   lavaPits: {},
+  ban: {
+    isSocialVerified: false,
+    status: "ok",
+  },
 };
